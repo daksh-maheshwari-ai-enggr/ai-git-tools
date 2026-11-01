@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@ai-git-tools/core": ["packages/core/src/index.ts"],
+      "@ai-git-tools/core/*": ["packages/core/src/*"],
+      "@ai-git-tools/api": ["packages/api/src/index.ts"],
+      "@ai-git-tools/cli": ["packages/cli/src/index.ts"],
+      "@ai-git-tools/web": ["packages/web/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src/**/*", "packages/*/*.config.*"]
+}

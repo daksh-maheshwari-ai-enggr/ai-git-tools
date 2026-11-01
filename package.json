@@ -1,0 +1,24 @@
+{
+  "name": "ai-git-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub AI Help Toolkit — developer productivity platform (CLI + Web Dashboard)",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @ai-git-tools/cli",
+    "build": "npm run build --workspace @ai-git-tools/core && npm run build --workspace @ai-git-tools/api && npm run build --workspace @ai-git-tools/cli && npm run build --workspace @ai-git-tools/web",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.5",
+    "tsx": "^4.19.3"
+  }
+}
