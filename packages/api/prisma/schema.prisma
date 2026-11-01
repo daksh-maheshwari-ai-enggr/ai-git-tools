@@ -1,0 +1,174 @@
+# SQLite is used during development for simplicity.
+# In production, switch to PostgreSQL by changing the provider below.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  githubId      String    @unique
+  githubLogin   String    @unique
+  avatarUrl     String?
+  name          String?
+  email         String?
+  tokenEncrypted String?   // encrypted GitHub token, never plaintext
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  repos          Repo[]
+  sessions       Session[]
+  apiKeys        ApiKey[]
+  commitRecords  CommitRecord[]
+  releaseNotes   ReleaseNote[]
+
+  @@index([githubLogin])
+}
+
+model Repo {
+  id            String          @id @default(cuid())
+  githubId      String          @unique  // GitHub repo ID
+  owner         String
+  name          String
+  fullName      String           // "owner/name"
+  defaultBranch String?
+  isPrivate     Boolean          @default(false)
+  aiProvider    String?          // per-repo AI provider override
+  aiModel       String?
+  contextPrompt String?          // extra context appended to prompts
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+
+  commitRecords CommitRecord[]
+  releaseNotes  ReleaseNote[]
+  prRecords     PullRequestRecord[]
+
+  @@index([userId])
+  @@index([fullName])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([expiresAt])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  keyHash     String   @unique
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model CommitRecord {
+  id            String   @id @default(cuid())
+  repoId        String
+  hash          String
+  shortHash     String
+  message       String
+  type          String?   // Conventional Commit type
+  scope         String?
+  description   String?
+  body          String?
+  breaking      Boolean   @default(false)
+  aiGenerated   Boolean   @default(false)
+  aiProvider    String?
+  aiModel       String?
+  author        String
+  authorLogin   String?
+  committedAt   DateTime
+  createdAt     DateTime @default(now())
+
+  repo     Repo   @relation(fields: [repoId], references: [id])
+  release  ReleaseNote[]
+
+  @@index([repoId])
+  @@index([committedAt])
+  @@unique([repoId, hash])
+}
+
+model PullRequestRecord {
+  id            String   @id @default(cuid())
+  repoId        String
+  githubId      String   @unique
+  number        Int
+  title         String
+  body          String?
+  state         String   // OPEN, CLOSED, MERGED
+  baseRef       String?
+  headRef       String?
+  authorLogin   String
+  aiGenerated   Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  mergedAt      DateTime?
+
+  repo Repo @relation(fields: [repoId], references: [id])
+
+  @@index([repoId])
+  @@index([state])
+}
+
+model ReleaseNote {
+  id            String   @id @default(cuid())
+  repoId        String
+  version       String
+  previousVersion String?
+  changelog     String   // markdown
+  commitIds     String[] // JSON array of CommitRecord IDs
+  aiGenerated   Boolean @default(false)
+  aiProvider    String?
+  aiModel       String?
+  generatedAt   DateTime @default(now())
+
+  repo Repo @relation(fields: [repoId], references: [id])
+
+  @@index([repoId])
+  @@unique([repoId, version])
+}
+
+model IssueRecord {
+  id            String   @id @default(cuid())
+  repoId        String
+  githubId      String   @unique
+  number        Int
+  title         String
+  body          String?
+  state         String   // OPEN, CLOSED
+  labels        String[] // JSON array
+  assigneeLogins String[] // JSON array
+  aiTriageAt    DateTime?
+  aiSuggestions String?   // JSON: { labels, assignees, draftResponse }
+  authorLogin   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  repo Repo @relation(fields: [repoId], references: [id])
+
+  @@index([repoId])
+  @@index([state])
+}

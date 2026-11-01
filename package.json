@@ -12,7 +12,11 @@
     "build": "npm run build --workspace @ai-git-tools/core && npm run build --workspace @ai-git-tools/api && npm run build --workspace @ai-git-tools/cli && npm run build --workspace @ai-git-tools/web",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:generate": "npm run prisma:generate --workspace @ai-git-tools/api",
+    "db:push": "npm run prisma:push --workspace @ai-git-tools/api",
+    "db:studio": "npm run prisma:studio --workspace @ai-git-tools/api",
+    "api:dev": "npm run dev --workspace @ai-git-tools/api"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
