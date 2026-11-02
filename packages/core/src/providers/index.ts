@@ -42,6 +42,24 @@ export const PROVIDER_CONFIGS: Record<ProviderId, ProviderConfig> = {
     defaultModel: 'llama3.1',
     baseUrl: 'http://localhost:11434/v1',
   },
+  groq: {
+    id: 'groq',
+    label: 'Groq',
+    defaultModel: 'llama-3.1-70b-versatile',
+    apiKeyEnv: 'GROQ_API_KEY',
+  },
+  openrouter: {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    defaultModel: 'meta-llama/llama-3.1-8b-instruct:free',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+  },
+  freellmapi: {
+    id: 'freellmapi',
+    label: 'FreeLLMAPI (fallback chain)',
+    defaultModel: 'auto',
+    // No single apiKeyEnv since it chains multiple providers
+  },
   'openai-compatible': {
     id: 'openai-compatible',
     label: 'OpenAI-compatible endpoint',
@@ -68,23 +86,36 @@ export function resolveProvider(
 }
 
 /** Factory: create a provider instance by id. Lazy — avoids importing heavy SDKs until needed. */
-export async function createProvider(
+export function createProvider(
   providerId: ProviderId,
-  model: string,
+  model?: string,
   apiKey?: string,
   baseUrl?: string,
-): Promise<LLMProvider> {
+): LLMProvider {
   switch (providerId) {
     case 'openai':
-      return (await import('./openai.js')).createOpenAIProvider(model, apiKey, baseUrl);
+      return (await import('./openai.js')).createOpenAIProvider(model ?? 'gpt-4o', apiKey, baseUrl);
     case 'anthropic':
-      return (await import('./anthropic.js')).createAnthropicProvider(model, apiKey);
+      return (await import('./anthropic.js')).createAnthropicProvider(model ?? 'claude-3-5-sonnet-20241022', apiKey);
     case 'google':
-      return (await import('./google.js')).createGoogleProvider(model, apiKey);
+      return (await import('./google.js')).createGoogleProvider(model ?? 'gemini-1.5-pro', apiKey);
     case 'ollama':
-      return (await import('./ollama.js')).createOllamaProvider(model, baseUrl);
+      return (await import('./ollama.js')).createOllamaProvider(model ?? 'llama3.1', baseUrl);
+    case 'groq':
+      return (await import('./groq.js')).createGroqProvider(model ?? 'llama-3.1-70b-versatile', apiKey);
+    case 'openrouter':
+      return (await import('./openrouter.js')).createOpenRouterProvider(
+        model ?? 'meta-llama/llama-3.1-8b-instruct:free',
+        apiKey,
+      );
+    case 'freellmapi':
+      return (await import('./freellmapi.js')).createFreeLLMAPIProvider({});
     case 'openai-compatible':
-      return (await import('./openai-compatible.js')).createOpenAICompatibleProvider(model, apiKey, baseUrl);
+      return (await import('./openai-compatible.js')).createOpenAICompatibleProvider(
+        model ?? 'gpt-4o',
+        apiKey,
+        baseUrl,
+      );
     default:
       throw new Error(`Unknown provider: ${providerId}`);
   }

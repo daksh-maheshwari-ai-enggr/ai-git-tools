@@ -8,6 +8,9 @@ export type ProviderId =
   | 'anthropic'
   | 'google'
   | 'ollama'
+  | 'groq'
+  | 'openrouter'
+  | 'freellmapi'
   | 'openai-compatible';
 
 export interface ProviderConfig {
